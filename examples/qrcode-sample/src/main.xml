@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<program xmlns="http://www.kinoma.com/kpr/1">
+
+    <require id="QRCode" path="QRCode" />
+
+    <container id="MainContainer" top="0" left="0" bottom="0" right="0">
+        <skin color="white"/>
+        <canvas top="0" left="0" bottom="0" right="0">
+            <behavior>
+                <method id="onDisplaying" params="content">
+                    <![CDATA[
+                        var qrcode = QRCode.create( "http://www.kinoma.com" );
+
+                        qrcode.draw( content );
+                    ]]>
+                </method>
+            </behavior>
+        </canvas>
+    </container>
+
+    <script>
+        <![CDATA[
+            application.add( new MainContainer() );
+        ]]>
+    </script>
+    
+</program>

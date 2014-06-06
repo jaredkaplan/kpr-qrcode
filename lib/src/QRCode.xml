@@ -1,0 +1,163 @@
+<!--
+  Copyright 2011-2014 Marvell Semiconductor, Inc.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<module xmlns="http://www.kinoma.com/kpr/1">
+    
+    <require id="QRCodeLib" path="lib/qrcode-lib" />
+    
+    <!-- Error correction level constants used to create QR code -->
+    <variable id="ErrorCorrectionLevel" value="{ L:1, M:0, Q:3, H:2 }" />
+    
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    <!-- Creates a new instance of a QR code object which can be -->
+    <!-- rendered into a drawing canvas or port.                 -->
+    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+    
+    <function id="create" params="data, errorCorrectionLevel, version">
+        <![CDATA[
+            var ecl = errorCorrectionLevel || ErrorCorrectionLevel.M;
+            var v = version || calculateVersion( ecl, data.length );
+            
+            if( v > 0 && v <= 40 )
+            {
+	            var qrcode = new QRCodeLib.QRCode( v, ecl );
+	            
+	            qrcode.addData( data );
+	            qrcode.make();
+	            
+	            return new QRCode( qrcode );
+	        }
+	        else
+	            throw new Error( "Invalid QR code version!" );
+        ]]>
+    </function>
+    
+    <private>
+        <variable id="MODULE_SIZE" value="4" />
+
+	    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	    <!-- QRCode class used to wrap Kazuhiko Arase's QRCode javascript -->
+	    <!-- library, and provide a KPR API for drawing the QR code into  -->
+	    <!-- a canvas or port object.                                     -->
+	    <!-- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+        <class id="QRCode">
+            <field id="qrcode" />
+            <constructor params="qrcode">
+                <![CDATA[
+                    this.qrcode = qrcode;
+                ]]>
+            </constructor>
+            <getter id="moduleCount">
+                <![CDATA[
+                    return this.qrcode.moduleCount;
+                ]]>
+            </getter>
+            <getter id="dimensions">
+                <![CDATA[
+                    return { width:moduleCount * MODULE_SIZE, height:moduleCount * MODULE_SIZE };
+                ]]>
+            </getter>
+            <method id="isDark" params="row, col">
+                <![CDATA[
+                    return this.qrcode.isDark( row, col );
+                ]]>
+            </method>
+            <method id="draw" params="content, x, y, color, scale">
+                <![CDATA[
+                    var drawingFunction = null;
+                    var ctx = null;
+
+                    if( content instanceof Canvas ) 
+                    {   
+                        ctx = content.getContext( "2d" );
+                        drawingFunction = canvas_fillModule;
+                    }
+                    
+                    else if( content instanceof Port )
+                    {
+                        ctx = content;
+                        drawingFunction = port_fillModule;
+                    }
+                    
+                    if( drawingFunction != null )
+                    {
+	                    var ms = scale != null ?  scale * MODULE_SIZE : MODULE_SIZE;
+	                    var mc = color || "black";
+			            var width = this.moduleCount * ms;
+			            var height = this.moduleCount * ms;
+	                    var mx = x || (content.width / 2 - width / 2);
+	                    var my = y || (content.height / 2 - height / 2);
+	                    
+			            for( var r = 0; r < this.moduleCount; r++ ) 
+			            {
+			                for( var c = 0; c < this.moduleCount; c++ ) 
+			                {
+			                    if( this.isDark( r, c ) )
+			                        drawingFunction( ctx, mx + (c * ms), my + (r * ms), ms, ms, mc );
+			                }   
+			            }
+			        }
+                ]]>
+            </method>
+        </class>
+        
+	    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	    <!-- Rendering functions for difference drawing targets      -->
+	    <!-- +++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	    
+        <function id="canvas_fillModule" params="ctx, x, y, width, height, color">
+            <![CDATA[
+                ctx.fillStyle = color;
+                ctx.fillRect( x, y, width, height);
+            ]]>
+        </function>
+        <function id="port_fillModule" params="port, x, y, width, height, color">
+            <![CDATA[
+                port.fillColor( color, x, y, width, height );
+            ]]>
+        </function>
+        
+        <!-- Utility function to calculate the minimum required version for a specified size -->
+        <function id="calculateVersion" params="ecl, size">
+            <![CDATA[
+                var data = DATA_CAPACITY[ecl]; 
+                var version = 0;
+            
+                for( var j = 0; j < data.length; j++ )
+                {
+                    if( data[j] >= size ) {
+                        version = j + 1;
+                        break;
+                    }
+                } 
+            
+                return version;
+            ]]>
+        </function>
+    </private>
+    
+    <script>
+        <![CDATA[
+            var DATA_CAPACITY = new Object();
+            
+            // create the data capacity tables for each error correction level
+            DATA_CAPACITY[ErrorCorrectionLevel.L] = [17,32,53,78,106,134,154,192,230,271,321,367,425,458,520,586,644,718,792,858,929,1003,1091,1171,1273,1367,1465,1528,1628,1732,1840,1952,2068,2188,2303,2431,2563,2699,2809,2953];
+            DATA_CAPACITY[ErrorCorrectionLevel.M] = [14,26,42,62,84,106,122,152,180,213,251,287,331,362,412,450,504,560,624,666,711,779,857,911,997,1059,1125,1190,1264,1370,1452,1538,1628,1722,1809,1911,1989,2099,2213,2331];
+            DATA_CAPACITY[ErrorCorrectionLevel.Q] = [11,20,32,46,60,74,86,108,130,151,177,203,241,258,292,322,364,394,442,482,509,565,611,661,715,751,805,868,908,982,1030,1112,1168,1228,1283,1351,1423,1499,1579,1663];
+            DATA_CAPACITY[ErrorCorrectionLevel.H] = [7,14,24,34,44,58,64,84,98,119,137,155,177,194,220,250,280,310,338,382,403,439,461,511,535,593,625,658,698,742,790,842,898,958,983,1051,1093,1139,1219,1273]
+        ]]>
+    </script>
+    
+</module>
