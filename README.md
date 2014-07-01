@@ -37,16 +37,16 @@ Creating a new instance of a QRCode object:
 var qrc = QRCode.create( data, errorCorrectionLevel, version );
 ```
 
-Only the data parameter is required. Optional error correction level and QR code version can also be specified, but if they are omitted then the most appropriate settings will be used for the given data. The error correction level must be one of the following constants from the QRCode module if specified:
-
-* QRCode.ErrorCorrectionLevel.L
-* QRCode.ErrorCorrectionLevel.M
-* QRCode.ErrorCorrectionLevel.Q
-* QRCode.ErrorCorrectionLevel.H
-
-The QR code version must be a value between 1-40. The QR code version and the error correction level determine the amount of data that can be encoded in the QR code. The following website provides more details about QR code versions and error correction levels:
-
-http://www.qrcode.com/en/about/version.html
+>Only the data parameter is required. Optional error correction level and QR code version can also be specified, but if they are omitted then the most appropriate settings will be used for the given data. The error correction level must be one of the following constants from the QRCode module if specified:
+>
+>* ErrorCorrectionLevel.L
+>* ErrorCorrectionLevel.M
+>* ErrorCorrectionLevel.Q
+>* ErrorCorrectionLevel.H
+>
+>The QR code version must be a value between 1-40. The QR code version and the error correction level determine the amount of data that can be encoded in the QR code. The following website provides more details about QR code versions and error correction levels:
+>
+>http://www.qrcode.com/en/about/version.html
 
 QRCode
 ------
@@ -59,7 +59,7 @@ Drawing the QR code:
 qrc.draw( content, x, y, color, scale )
 ```
 
-Only the content parameter is required, and must be either a Canvas or a Port object. The x and y parameters specify the location in the content object to draw the QR code, or if omitted the QR code will be drawn centered inside the content area.
+>Only the content parameter is required, and must be either a Canvas or a Port object. The x and y parameters specify the location in the content object to draw the QR code, or if omitted the QR code will be drawn centered inside the content area.
 
 Iterating through the raw QR code module data:
 
